@@ -10,6 +10,7 @@ namespace FrpClient
 {
     class FrpModel
     {
+        readonly string frpPath = System.Configuration.ConfigurationManager.AppSettings["frppath"];
         public FrpSettingModel Config { get; set; }
 
         public Process RunProcess { get; set; }
@@ -29,13 +30,18 @@ namespace FrpClient
 
         public void Run()
         {
+            if (System.IO.File.Exists(frpPath) == false)
+            {
+                return;
+            }
+
             RunProcess = new System.Diagnostics.Process();
             RunProcess.StartInfo.UseShellExecute = false;
-            RunProcess.StartInfo.FileName =Application.StartupPath + @"\frp\frpc.exe";
+            RunProcess.StartInfo.FileName = frpPath;
             RunProcess.StartInfo.Arguments = "-c \"" + Config.ConfigFile + "\"";
             RunProcess.StartInfo.CreateNoWindow = true;
             RunProcess.EnableRaisingEvents = true;
-            RunProcess.StartInfo.WorkingDirectory =Application.StartupPath + @"\frp\";
+            RunProcess.StartInfo.WorkingDirectory = System.IO.Path.GetDirectoryName(frpPath);
             RunProcess.Exited += new EventHandler(exep_Exited);
             RunProcess.Start();
             SetListViewInfo("已启动");
