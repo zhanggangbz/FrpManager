@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -12,12 +13,23 @@ namespace FrpClient
 {
     public partial class Form1 : Form
     {
-        List<FrpModel> FrpList = new List<FrpModel>();
-
         public Form1()
         {
             InitializeComponent();
+
+            //注册EventWaitHandle事件处理体
+            ThreadPool.RegisterWaitForSingleObject(Program.ProgramStarted, OnProgramStarted, null, -1, false);  
         }
+
+        //显示已存在的窗口
+        private void OnProgramStarted(object state, bool timedOut)
+        {
+            this.Visible = true;
+            this.WindowState = FormWindowState.Normal;
+            this.Activate();
+        }
+
+        List<FrpModel> FrpList = new List<FrpModel>();
 
         /// <summary>
         /// 增加配置按钮
@@ -25,8 +37,7 @@ namespace FrpClient
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
-        {
-            
+        {    
             FrpSetForm dlg = new FrpSetForm();
             if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -48,6 +59,12 @@ namespace FrpClient
                     item.Run();
                 }
             }
+
+            System.Timers.Timer aTimer = new System.Timers.Timer();
+            aTimer.Elapsed += new System.Timers.ElapsedEventHandler(aTimer_Elapsed);
+            // 设置引发时间的时间间隔 此处设置为１秒
+            aTimer.Interval = 60000;
+            aTimer.Enabled = true;
         }
 
         private void InitAllFrp()
@@ -270,6 +287,59 @@ namespace FrpClient
                 this.Close();
                 this.Dispose();
                 System.Environment.Exit(System.Environment.ExitCode);
+            }
+        }
+
+
+        private void aTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (isReFresh)
+            {
+                // 得到 hour minute second  如果等于某个值就开始执行
+                int intHour = e.SignalTime.Hour;
+                int intMinute = e.SignalTime.Minute;
+
+                if (intHour == freshHour && intMinute == freshmit)
+                {
+                    ReStartAllFrp();
+                }
+            }
+        }
+
+        private void ReStartAllFrp()
+        {
+            foreach (FrpModel item in FrpList)
+            {
+                if (item.IsRun)
+                {
+                    try
+                    {
+                        item.Exit();
+                        System.Threading.Thread.Sleep(5000);
+                        item.Run();
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+        }
+
+        bool isReFresh = false;
+
+        int freshHour = 1;
+        int freshmit = 0;
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            SysSet dlg = new SysSet(isReFresh, freshHour, freshmit);
+
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                isReFresh = dlg.AutoRefesh;
+                freshHour = dlg.RefeshHour;
+                freshmit = dlg.RefeshMinite;
             }
         }
     }
