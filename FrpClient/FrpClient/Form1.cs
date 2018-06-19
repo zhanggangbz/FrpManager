@@ -111,14 +111,6 @@ namespace FrpClient
             }
         }
 
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            foreach (FrpModel item in FrpList)
-            {
-                item.Exit();
-            }
-        }
-
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (this.listView1.SelectedItems.Count > 0)
@@ -284,7 +276,10 @@ namespace FrpClient
             if (MessageBox.Show("你确定要退出？", "系统提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
             {
                 this.mainNotifyIcon.Visible = false;
-                this.Close();
+                foreach (FrpModel item in FrpList)
+                {
+                    item.Exit();
+                }
                 this.Dispose();
                 System.Environment.Exit(System.Environment.ExitCode);
             }
