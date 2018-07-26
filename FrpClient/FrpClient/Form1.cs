@@ -337,5 +337,18 @@ namespace FrpClient
                 freshmit = dlg.RefeshMinite;
             }
         }
+
+
+        protected override void DefWndProc(ref Message msg)
+        {
+            if (msg.Msg == 0xC086) // WM_TASKBAR_CREATED
+            {
+                this.mainNotifyIcon.Visible = true;
+            }
+            else
+            {
+                base.DefWndProc(ref msg);
+            }              
+        }
     }
 }
